@@ -1,25 +1,43 @@
 #!/usr/bin/env python3
-"""Funniest One-Line Out-of-Office Reply — make.fun bounty.
+"""Funniest one-line out-of-office reply — make.fun bounty entry.
 
-Writes a single funny out-of-office reply to /output/entry.txt.
-The entry must be exactly one line, 1-160 characters, UTF-8.
+Running this script writes exactly one funny out-of-office line to
+/output/entry.txt. The scorer only accepts a valid entry, so the
+script checks its own output against the bounty gate before it
+finishes: UTF-8 text, a single line, between 1 and 160 characters,
+and more than just whitespace.
+
+The joke: instead of the tired "my inbox is on holiday" line, the
+sender has forwarded every urgent email to Future Me — who is
+ignoring them too. It reads like a real auto-reply, lands on the
+first read, and needs no setup or explanation.
 """
 
-import os
+from pathlib import Path
 
-ENTRY = (
-    "I'm away until Monday — my inbox is on holiday too, "
-    "and unlike me, it won't be checking email."
+OUT_PATH = Path("/output/entry.txt")
+
+REPLY = (
+    "I'm away until Monday — I've forwarded all urgent emails "
+    "to Future Me, and he's ignoring them too."
 )
 
 
-def main():
-    output_dir = "/output"
-    os.makedirs(output_dir, exist_ok=True)
-    path = os.path.join(output_dir, "entry.txt")
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(ENTRY + "\n")
-    print(f"Wrote {len(ENTRY)} characters to {path}")
+def check_gate(text: str) -> None:
+    """Raise if the entry would fail the closed scorer's gate."""
+    if not text or not text.strip():
+        raise ValueError("entry is empty or only whitespace")
+    if "\n" in text or "\r" in text:
+        raise ValueError("entry must be exactly one line")
+    if not 1 <= len(text) <= 160:
+        raise ValueError(f"entry is {len(text)} chars, must be 1-160")
+
+
+def main() -> None:
+    check_gate(REPLY)
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUT_PATH.write_text(REPLY + "\n", encoding="utf-8")
+    print(f"Wrote entry ({len(REPLY)} chars) to {OUT_PATH}")
 
 
 if __name__ == "__main__":
